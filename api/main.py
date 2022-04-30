@@ -61,7 +61,7 @@ async def root():
 # Get 100 restaurants from the restaurant collection
 @app.get("/restaurants", response_model=List[RestaurantModel])
 async def get_restaurants():
-    restaurants = await db["restaurants"].get().to_list(100)
+    restaurants = await db["restaurants"].find().to_list(100)
 
     return restaurants
 

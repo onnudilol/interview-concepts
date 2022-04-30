@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import "leaflet";
 import "leaflet/dist/leaflet.css";
-import "axios";
+import axios from "axios";
 
 const orders = ref([]);
 const order = ref({
@@ -24,7 +24,6 @@ function submitOrder() {
   });
   order.value.name = "";
   order.value.items = [];
-
 }
 
 onMounted(() => {
