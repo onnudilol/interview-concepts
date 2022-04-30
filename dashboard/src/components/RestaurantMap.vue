@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import "leaflet";
 import "leaflet/dist/leaflet.css";
-import "axios";
+import axios from 'axios';
 
 const orders = ref([]);
 const order = ref({
@@ -24,18 +24,9 @@ function submitOrder() {
   });
   order.value.name = "";
   order.value.items = [];
-
 }
 
-onMounted(() => {
-  // creates popup and sets the order name when clicking the feature
-  function onEachFeature(feature, layer) {
-    if (feature.properties && feature.properties.name) {
-      layer.bindPopup(feature.properties.name);
-      layer.on("click", () => (order.value.name = feature.properties.name));
-    }
-  }
-
+onMounted(async () => {
   // starts the map somewhere near brooklyn, nyc
   const map = L.map("map").setView([40.730002, -73.949997], 11);
   const tileLayer = L.tileLayer(
@@ -47,6 +38,30 @@ onMounted(() => {
     }
   );
   tileLayer.addTo(map);
+
+  // creates popup and sets the order name when clicking the feature
+  function onEachFeature(feature, layer) {
+    if (feature.properties && feature.properties.name) {
+      layer.bindPopup(feature.properties.name);
+      layer.on("click", async function() {
+        order.value.name = feature.properties.name;
+        if(feature.geometry.type === "Point") {
+          const neighborhood = await axios.get('http://localhost:3000/neighborhood', { params: { lat: feature.geometry.coordinates[0], lon: feature.geometry.coordinates[1]}});
+          const neighborhoodGeoJSON = {
+            type: "Feature",
+            properties: { name: neighborhood.data.name },
+            geometry: {
+              type: "Polygon",
+              coordinates: neighborhood.data.geometry.coordinates
+            }
+          };
+          L.geoJSON(neighborhoodGeoJSON, {
+            onEachFeature,
+          }).addTo(map);
+        }
+      });
+    }
+  }
 
   // adds two restaurant markers to the map
   const geojsonFeatures = [
