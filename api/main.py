@@ -76,7 +76,7 @@ async def root():
 # Get 100 restaurants from the restaurant collection
 @app.get("/restaurants", response_model=List[RestaurantModel])
 async def get_restaurants():
-    restaurants = await db["restaurants"].get().to_list(100)
+    restaurants = await db["restaurants"].find().to_list(100)
 
     return restaurants
 
@@ -85,4 +85,21 @@ async def get_restaurants():
 @app.get("/neighborhoods", response_model=List[NeighborhoodModel])
 async def get_neighborhoods():
     neighborhoods = await db["neighborhoods"].find().to_list(100)
+
     return neighborhoods
+
+
+@app.get("/neighborhood", response_model=NeighborhoodModel)
+async def get_nearest_neighborhood(lat, lon):
+    neighborhood = await db["neighborhoods"].find_one({
+        "geometry": {
+            "$geoIntersects": {
+                "$geometry": {
+                    "type": "Point",
+                    "coordinates": [float(lat), float(lon)]
+                }
+            }
+        }
+    })
+
+    return neighborhood
