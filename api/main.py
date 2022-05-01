@@ -83,4 +83,21 @@ async def get_restaurants():
 @app.get("/neighborhoods", response_model=List[NeighborhoodModel])
 async def get_neighborhoods():
     neighborhoods = await db["neighborhoods"].find().to_list(100)
+
     return neighborhoods
+
+
+@app.get("/neighborhood", response_model=NeighborhoodModel)
+async def get_nearest_neighborhood(lat, lon):
+    neighborhood = await db["neighborhoods"].find_one({
+        "geometry": {
+            "$geoIntersects": {
+                "$geometry": {
+                    "type": "Point",
+                    "coordinates": [float(lat), float(lon)]
+                }
+            }
+        }
+    })
+
+    return neighborhood
