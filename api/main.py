@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import motor.motor_asyncio
 from bson import ObjectId
 from pydantic import BaseModel, Field
@@ -6,6 +7,18 @@ from typing import List
 
 
 app = FastAPI()
+origins = [
+    "http://localhost",
+    "http://localhost:8080",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 client = motor.motor_asyncio.AsyncIOMotorClient("mongodb://root:password@mongo/admin")
 db = client.api
 
