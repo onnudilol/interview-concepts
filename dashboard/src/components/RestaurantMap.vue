@@ -2,7 +2,7 @@
 import { onMounted, ref } from "vue";
 import "leaflet";
 import "leaflet/dist/leaflet.css";
-import axios from 'axios';
+import axios from "axios";
 
 const orders = ref([]);
 const order = ref({

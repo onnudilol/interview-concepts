@@ -45,7 +45,7 @@ You will also be required to review a pull request that will display the deliver
 
 If the dashboard errors out, try deleting the `dashboard/node_modules` directory and running `docker-compose up` again.
 
-# Prompt for interviewers
+# For interviewers
 
 Ask the candidate about the pros and cons for transforming the MongoDB response from the backend or frontend.
 
@@ -54,3 +54,59 @@ How would they choose to persist order data between page reloads?
 How would they design and deploy the application in production?
 
 For the pull request review, check the quality of their comments and if the tone is appropriate for collaborating with a team.
+
+Ideally the data should be directly projected in the correct format by MongoDB by using the aggregation pipeline like this
+
+```
+@app.get("/neighborhood")
+async def get_nearest_neighborhood(lat, lon):
+    pipeline = [
+        {
+            '$match': {
+                'geometry': {
+                    '$geoIntersects': {
+                        '$geometry': {
+                            'type': 'Point',
+                            'coordinates': [lat, lon]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            '$project': {
+                '_id': 0,
+                'type': 'Feature',
+                'properties': {
+                    'name': '$name'
+                },
+                'geometry': '$geometry'
+            }
+        }
+    ]
+    neighborhood = await db["neighborhood"].aggregate(pipeline)
+
+    return neighborhood
+```
+
+Check if they actually tested the PR according to the description and noticed these two bugs
+
+1. Clicking a point will set the order name to any feature's name, even if it's a neighborhood.  It should only set the name if it's a restaurant.
+2. Clicking a marker repeatedly will keep stacking layers.  The neighborhood layer should be removed before adding the nearest neighborhood to a point like this
+
+```
+  function onEachFeature(feature, layer) {
+    ...
+
+    layer.on("click", function() {
+
+    if(layer.feature.geometry && layer.feature.geometry.type === "Point") {
+      order.value.name = feature.properties.name;
+      map.eachLayer(function(layer) {
+      if(layer.feature && layer.feature.geometry.type === "Polygon") {
+        layer.remove();
+      }
+    });
+    }
+  }
+```
